@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Bindable var controller: KeeperController
+    @Environment(LocalizationStore.self) private var localization
     @State private var isCityPickerPresented = false
     @State private var isSettingsPresented = false
 
@@ -19,8 +20,8 @@ struct ContentView: View {
                 )
                 ControlBar(controller: controller)
 
-                if controller.state == .waiting {
-                    ConnectionHelpView()
+                if controller.state == .waiting || controller.state == .restoring {
+                    ConnectionHelpView(controller: controller)
                 }
 
                 if let errorMessage = controller.errorMessage {
@@ -29,7 +30,7 @@ struct ContentView: View {
 
                 LogPanel(logs: controller.logs)
 
-                Text("Command‑Q закрывает приложение, но keeper продолжает работать. Для возврата реального GPS нажмите Stop.")
+                Text(localization.text("content.safetyFootnote"))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

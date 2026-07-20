@@ -1,0 +1,101 @@
+"header.subtitle" = "Управление симуляцией GPS для подключённого iPhone";
+"header.settings" = "Настройки";
+"content.safetyFootnote" = "При закрытии GeoShift всегда ставит возврат реального GPS в очередь. После аварийного завершения watchdog сделает это не позднее чем через пять минут.";
+
+"control.start" = "Запустить";
+"control.restore" = "Вернуть GPS";
+"control.restart" = "Перезапустить";
+"control.refresh" = "Переподключить";
+
+"city.choose" = "Выбрать город";
+"city.searchPrompt" = "Город, страна или регион";
+"city.pickerTitle" = "Выбор города";
+"city.selected" = "Выбрано";
+"common.done" = "Готово";
+"common.close" = "Закрыть";
+"unit.secondsShort" = "сек";
+
+"region.balkans" = "Балканы";
+"region.europe" = "Европа";
+"region.middleEastAfrica" = "Ближний Восток и Африка";
+"region.asia" = "Азия";
+"region.northAmerica" = "Северная Америка";
+"region.latinAmerica" = "Латинская Америка";
+"region.oceania" = "Австралия и Океания";
+
+"state.stopped" = "Симуляция сброшена";
+"state.restoring" = "Возвращаю реальный GPS";
+"state.waiting" = "Ожидание iPhone";
+"state.active" = "Симуляция активна";
+"state.working" = "Подключение…";
+"state.failed" = "Требуется внимание";
+
+"logs.empty" = "Журнал пока пуст";
+"logs.title" = "Диагностика · последние 50 событий";
+
+"settings.title" = "Настройки";
+"settings.languageSection" = "Язык";
+"settings.language" = "Язык приложения";
+"settings.timings" = "Тайминги";
+"settings.retry" = "Повтор подключения";
+"settings.refresh" = "Обновление GPS";
+"settings.safetySection" = "Защита от зависшей геопозиции";
+"settings.safetyQuit" = "При Command-Q и закрытии окна возврат GPS ставится в очередь автоматически.";
+"settings.safetyHeartbeat" = "Если GeoShift аварийно исчезнет, worker заметит это по heartbeat и выполнит сброс максимум через пять минут.";
+"settings.safetyQueue" = "Если iPhone недоступен, очередь сохранится до следующего доверенного подключения.";
+"settings.connection" = "Подключение";
+"settings.changesSection" = "Что меняется";
+"settings.changesCoordinates" = "Подменяются только координаты Core Location на iPhone.";
+"settings.changesPersistence" = "Установленная геопозиция сохраняется на iPhone без связи с Mac — пока команда clear не завершится успешно или устройство не перезагрузится.";
+"settings.changesIP" = "IP-адрес, ping и маршрут интернета не меняются.";
+"settings.changesVPN" = "VPN — отдельный инструмент; он меняет интернет-маршрут и IP.";
+"settings.changesDetection" = "Некоторые приложения могут распознавать программную симуляцию.";
+
+"pairing.title" = "Подключение iPhone без кабеля";
+"pairing.fallback" = "Запасной вариант: один раз подключите разблокированный iPhone кабелем и подтвердите «Доверять». Существующую системную пару MacBook Pro удалять не нужно.";
+"pairing.waiting" = "Ожидаю iPhone…";
+"pairing.saved" = "Учётные данные Wi-Fi-пары GeoShift сохранены";
+"pairing.frequency" = "Обычно это одноразовое разрешение — обновлять его каждую неделю или месяц не нужно. Повторите сопряжение только после удаления пары, сброса доверия или сети, переустановки macOS или если обновление iOS/macOS аннулировало запись.";
+"pairing.check" = "Проверить подключение";
+"pairing.recreate" = "Создать пару заново";
+"pairing.failed" = "Не удалось создать Wi-Fi-пару";
+"pairing.retry" = "Повторить сопряжение";
+"pairing.missing" = "Отдельная Wi-Fi-пара GeoShift ещё не создана";
+"pairing.setup" = "Настроить Wi-Fi-подключение";
+"pairing.step1" = "1. Оставьте Mac и iPhone в одной Wi-Fi-сети.";
+"pairing.step2" = "2. На iPhone откройте: Настройки → Для разработчиков → Сопряжённые Mac.";
+"pairing.step3" = "3. В разделе «Другие устройства» нажмите GeoShift и введите показанный здесь шестизначный код.";
+"pairing.step4" = "4. GeoShift сохранит пару и переподключится автоматически.";
+"pairing.codeAccessibility" = "Код сопряжения";
+
+"controller.checkingService" = "Проверяю фоновый сервис…";
+"controller.applyingSettings" = "Применяю новые интервалы…";
+"controller.sendingCoordinates" = "Передаю координаты:";
+"controller.startingTunnel" = "Запускаю developer-туннель…";
+"controller.restoring" = "Отправляю команду возврата реального GPS…";
+"controller.quitBusy" = "Не удалось безопасно закрыть GeoShift: текущая операция не завершилась.";
+"controller.quitHandoff" = "GeoShift остался открыт: возврат GPS не поставлен в надёжную очередь. Повторите «Вернуть GPS».";
+"controller.hardRestart" = "Полностью перезапускаю developer-туннель…";
+"controller.reconnecting" = "Немедленная попытка подключения…";
+"controller.recoverySession" = "Найдена незавершённая сессия. Сразу возвращаю реальный GPS…";
+"controller.startFailed" = "Не удалось запустить фоновый сервис";
+"controller.restoreFailed" = "Не удалось запустить восстановление GPS";
+"controller.checkingQueue" = "Проверяю очередь возврата GPS…";
+"controller.watchdogUpdateFailed" = "Не удалось обновить safety-watchdog";
+"controller.watchdogRepairFailed" = "Watchdog не смог восстановить worker";
+"controller.previousWorkerTimeout" = "Предыдущий worker не завершился за 15 секунд.";
+"controller.pairingModuleMissing" = "Не найден модуль беспроводного сопряжения.";
+"controller.pairingStarting" = "Запускаю мастер Wi-Fi-сопряжения…";
+
+"status.cleared" = "Команда clear отправлена через developer-канал подключённого iPhone. Проверьте реальную геопозицию в «Картах».";
+"status.restorePending" = "Сброс ожидает доверенное подключение к iPhone";
+"status.phoneUnavailable" = "GeoShift не видит iPhone по USB или доверенной Wi-Fi-паре";
+"status.active" = "Симуляция активна";
+"status.gpsEvery" = "GPS каждые";
+"status.connecting" = "Фоновый сервис подключается";
+"status.notConfirmed" = "Реальный GPS не подтверждён; нажмите «Вернуть GPS»";
+
+"error.commandFailed" = "Команда завершилась с ошибкой.";
+"error.previousOperation" = "Предыдущая операция завершилась с ошибкой. Повторите её или откройте диагностику для проверки подключения.";
+"error.missingDependency" = "Не найден pymobiledevice3";
+"error.missingKeeper" = "В приложении отсутствует keeper.py.";

@@ -1,0 +1,101 @@
+"header.subtitle" = "Control iPhone GPS simulation from your Mac";
+"header.settings" = "Settings";
+"content.safetyFootnote" = "When GeoShift closes, it always queues a return to real GPS. After an unexpected termination, the watchdog does this within five minutes.";
+
+"control.start" = "Start";
+"control.restore" = "Restore GPS";
+"control.restart" = "Restart";
+"control.refresh" = "Reconnect";
+
+"city.choose" = "Choose city";
+"city.searchPrompt" = "City, country, or region";
+"city.pickerTitle" = "Choose a city";
+"city.selected" = "Selected";
+"common.done" = "Done";
+"common.close" = "Close";
+"unit.secondsShort" = "sec";
+
+"region.balkans" = "Balkans";
+"region.europe" = "Europe";
+"region.middleEastAfrica" = "Middle East & Africa";
+"region.asia" = "Asia";
+"region.northAmerica" = "North America";
+"region.latinAmerica" = "Latin America";
+"region.oceania" = "Australia & Oceania";
+
+"state.stopped" = "Simulation cleared";
+"state.restoring" = "Restoring real GPS";
+"state.waiting" = "Waiting for iPhone";
+"state.active" = "Simulation active";
+"state.working" = "Connecting…";
+"state.failed" = "Action required";
+
+"logs.empty" = "No diagnostics yet";
+"logs.title" = "Diagnostics · last 50 events";
+
+"settings.title" = "Settings";
+"settings.languageSection" = "Language";
+"settings.language" = "App language";
+"settings.timings" = "Timing";
+"settings.retry" = "Reconnect delay";
+"settings.refresh" = "GPS refresh";
+"settings.safetySection" = "Protection from a stuck location";
+"settings.safetyQuit" = "Command-Q and closing the window automatically queue Restore GPS.";
+"settings.safetyHeartbeat" = "If GeoShift disappears unexpectedly, the worker detects the missing heartbeat and restores GPS within five minutes.";
+"settings.safetyQueue" = "If the iPhone is unavailable, the restore request remains queued until the next trusted connection.";
+"settings.connection" = "Connection";
+"settings.changesSection" = "What GeoShift changes";
+"settings.changesCoordinates" = "Only iPhone Core Location coordinates are simulated.";
+"settings.changesPersistence" = "A simulated location remains on the iPhone without the Mac until a clear command succeeds or the device restarts.";
+"settings.changesIP" = "Your IP address, latency, and internet route do not change.";
+"settings.changesVPN" = "A VPN is a separate tool that changes the network route and public IP.";
+"settings.changesDetection" = "Some apps can detect software-based location simulation.";
+
+"pairing.title" = "Connect iPhone without a cable";
+"pairing.fallback" = "Fallback: connect the unlocked iPhone by cable once and confirm Trust. You do not need to remove the existing MacBook Pro system pairing.";
+"pairing.waiting" = "Waiting for iPhone…";
+"pairing.saved" = "GeoShift Wi-Fi pairing credentials are saved";
+"pairing.frequency" = "This permission is normally one-time; it does not need weekly or monthly renewal. Pair again only after deleting the pair, resetting trust or network settings, reinstalling macOS, or when an iOS/macOS update invalidates the record.";
+"pairing.check" = "Check connection";
+"pairing.recreate" = "Pair again";
+"pairing.failed" = "Could not create the Wi-Fi pair";
+"pairing.retry" = "Retry pairing";
+"pairing.missing" = "A dedicated GeoShift Wi-Fi pair has not been created yet";
+"pairing.setup" = "Set up Wi-Fi connection";
+"pairing.step1" = "1. Keep the Mac and iPhone on the same Wi-Fi network.";
+"pairing.step2" = "2. On iPhone, open Settings → Developer → Paired Macs.";
+"pairing.step3" = "3. Under Other Devices, tap GeoShift and enter the six-digit code shown here.";
+"pairing.step4" = "4. GeoShift saves the pair and reconnects automatically.";
+"pairing.codeAccessibility" = "Pairing code";
+
+"controller.checkingService" = "Checking the background service…";
+"controller.applyingSettings" = "Applying timing settings…";
+"controller.sendingCoordinates" = "Sending coordinates:";
+"controller.startingTunnel" = "Starting the developer tunnel…";
+"controller.restoring" = "Sending the command to restore real GPS…";
+"controller.quitBusy" = "GeoShift could not close safely because the current operation did not finish.";
+"controller.quitHandoff" = "GeoShift stayed open because Restore GPS was not handed to a reliable queue. Try Restore GPS again.";
+"controller.hardRestart" = "Restarting the developer tunnel…";
+"controller.reconnecting" = "Trying to connect now…";
+"controller.recoverySession" = "An unfinished session was found. Restoring real GPS immediately…";
+"controller.startFailed" = "Could not start the background service";
+"controller.restoreFailed" = "Could not start GPS restoration";
+"controller.checkingQueue" = "Checking the Restore GPS queue…";
+"controller.watchdogUpdateFailed" = "Could not update the safety watchdog";
+"controller.watchdogRepairFailed" = "The watchdog could not repair the worker";
+"controller.previousWorkerTimeout" = "The previous worker did not stop within 15 seconds.";
+"controller.pairingModuleMissing" = "The wireless pairing module is missing.";
+"controller.pairingStarting" = "Starting the Wi-Fi pairing assistant…";
+
+"status.cleared" = "The clear command was sent through the connected iPhone's developer channel. Open Maps to verify the physical location.";
+"status.restorePending" = "Restore GPS is waiting for a trusted iPhone connection";
+"status.phoneUnavailable" = "GeoShift cannot see the iPhone over USB or the trusted Wi-Fi pair";
+"status.active" = "Simulation is active";
+"status.gpsEvery" = "GPS refresh every";
+"status.connecting" = "The background service is connecting";
+"status.notConfirmed" = "Real GPS is not confirmed; choose Restore GPS";
+
+"error.commandFailed" = "The command failed.";
+"error.previousOperation" = "The previous operation failed. Try again or open Diagnostics for connection details.";
+"error.missingDependency" = "pymobiledevice3 was not found";
+"error.missingKeeper" = "keeper.py is missing from the app bundle.";

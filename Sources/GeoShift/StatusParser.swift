@@ -1,27 +1,47 @@
+import Foundation
+
 enum StatusParser {
-    static func state(launchctlOutput: String, logs: String) -> KeeperState {
-        guard launchctlOutput.contains("state = running") ||
-                launchctlOutput.contains("state = spawn scheduled") else {
-            return .stopped
-        }
-
-        let currentSession = logs.components(separatedBy: "Location Keeper started").last ?? logs
-
-        if currentSession.contains("Location set:") ||
-            currentSession.contains("Belgrade location refreshed") {
-            return .active
-        }
-
-        if currentSession.contains("iPhone is not connected") ||
-            currentSession.contains("DeviceNotFoundError") {
-            return .waiting
-        }
-
-        if currentSession.contains("ERROR") ||
-            currentSession.contains("forcing a clean process restart") {
+    static func state(
+        launchctlOutput: String,
+        configuration: KeeperConfiguration?,
+        workerStatus: WorkerStatus?,
+        now: Double = Date.now.timeIntervalSince1970
+    ) -> KeeperState {
+        guard let configuration else {
             return .failed
         }
 
-        return .working
+        let serviceIsRunning = launchctlOutput.contains("state = running")
+        let statusMatchesRequest = workerStatus?.requestID == configuration.requestID
+
+        if !configuration.simulationEnabled {
+            if statusMatchesRequest, workerStatus?.phase == .cleared,
+               workerStatus?.simulationMayBeActive == false {
+                return .stopped
+            }
+            return serviceIsRunning ? .restoring : .failed
+        }
+
+        guard statusMatchesRequest, let workerStatus else {
+            return serviceIsRunning ? .working : .failed
+        }
+        let maximumStatusAge = max(Double(configuration.refreshSeconds * 2), 30)
+        let statusIsFresh = now - workerStatus.updatedAt <= maximumStatusAge
+        guard serviceIsRunning, statusIsFresh else {
+            return .failed
+        }
+
+        return switch workerStatus.phase {
+        case .active:
+            .active
+        case .waitingForDevice:
+            .waiting
+        case .starting, .connecting, .applying:
+            .working
+        case .clearing, .clearPending:
+            .restoring
+        case .failed, .cleared:
+            .failed
+        }
     }
 }

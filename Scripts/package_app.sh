@@ -32,6 +32,12 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>${MARKETING_VERSION}</string>
     <key>CFBundleVersion</key><string>${BUILD_NUMBER}</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>ru</string>
+    </array>
     <key>LSMinimumSystemVersion</key><string>${MACOS_MIN_VERSION}</string>
     <key>NSHighResolutionCapable</key><true/>
 </dict>
@@ -46,6 +52,9 @@ fi
 cp "$BINARY" "$APP/Contents/MacOS/$EXECUTABLE_NAME"
 chmod +x "$APP/Contents/MacOS/$EXECUTABLE_NAME"
 cp "$ROOT/Sources/GeoShift/Resources/keeper.py" "$APP/Contents/Resources/keeper.py"
+cp "$ROOT/Sources/GeoShift/Resources/pairing.py" "$APP/Contents/Resources/pairing.py"
+cp -R "$ROOT/Sources/GeoShift/Resources/en.lproj" "$APP/Contents/Resources/en.lproj"
+cp -R "$ROOT/Sources/GeoShift/Resources/ru.lproj" "$APP/Contents/Resources/ru.lproj"
 if [[ -f "$ROOT/Assets/AppIcon.icns" ]]; then
     cp "$ROOT/Assets/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 fi

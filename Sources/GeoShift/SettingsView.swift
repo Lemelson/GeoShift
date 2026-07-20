@@ -3,57 +3,87 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var controller: KeeperController
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var localization
 
     var body: some View {
+        @Bindable var localization = localization
+
         NavigationStack {
             Form {
-                Section("Тайминги") {
+                Section(localization.text("settings.languageSection")) {
                     Picker(
-                        "Повтор подключения",
+                        localization.text("settings.language"),
+                        selection: $localization.language
+                    ) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section(localization.text("settings.timings")) {
+                    Picker(
+                        localization.text("settings.retry"),
                         selection: $controller.retrySeconds
                     ) {
-                        Text("2 сек").tag(2)
-                        Text("5 сек").tag(5)
-                        Text("10 сек").tag(10)
-                        Text("30 сек").tag(30)
+                        durationOption(2)
+                        durationOption(5)
+                        durationOption(10)
+                        durationOption(30)
                     }
 
                     Picker(
-                        "Обновление GPS",
+                        localization.text("settings.refresh"),
                         selection: $controller.locationRefreshSeconds
                     ) {
-                        Text("5 сек").tag(5)
-                        Text("10 сек").tag(10)
-                        Text("15 сек").tag(15)
-                        Text("30 сек").tag(30)
-                        Text("60 сек").tag(60)
+                        durationOption(5)
+                        durationOption(10)
+                        durationOption(15)
+                        durationOption(30)
+                        durationOption(60)
                     }
                 }
 
-                Section("Что меняется") {
-                    Label("Подменяются только координаты Core Location на iPhone.", systemImage: "location.fill")
-                    Label("IP-адрес, ping и маршрут интернета не меняются.", systemImage: "network")
-                    Label("VPN — отдельный инструмент; он меняет интернет-маршрут и IP.", systemImage: "shield.lefthalf.filled")
-                    Label("Некоторые приложения могут распознавать программную симуляцию.", systemImage: "exclamationmark.triangle")
+                Section(localization.text("settings.safetySection")) {
+                    Label(localization.text("settings.safetyQuit"), systemImage: "power")
+                    Label(localization.text("settings.safetyHeartbeat"), systemImage: "heart.text.square")
+                    Label(localization.text("settings.safetyQueue"), systemImage: "checklist")
+                }
+
+                Section(localization.text("settings.connection")) {
+                    PairingGuideView(controller: controller)
+                }
+
+                Section(localization.text("settings.changesSection")) {
+                    Label(localization.text("settings.changesCoordinates"), systemImage: "location.fill")
+                    Label(localization.text("settings.changesPersistence"), systemImage: "iphone.and.arrow.forward")
+                    Label(localization.text("settings.changesIP"), systemImage: "network")
+                    Label(localization.text("settings.changesVPN"), systemImage: "shield.lefthalf.filled")
+                    Label(localization.text("settings.changesDetection"), systemImage: "exclamationmark.triangle")
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle("Настройки")
+            .navigationTitle(localization.text("settings.title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Закрыть", action: dismiss.callAsFunction)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Применить", action: apply)
-                        .buttonStyle(.borderedProminent)
+                    Button(localization.text("common.close"), action: dismiss.callAsFunction)
                 }
             }
         }
         .frame(minWidth: 580, minHeight: 460)
+        .onChange(of: controller.retrySeconds) {
+            controller.applySettings()
+        }
+        .onChange(of: controller.locationRefreshSeconds) {
+            controller.applySettings()
+        }
+        .onChange(of: localization.language) {
+            controller.languageDidChange()
+        }
     }
 
-    private func apply() {
-        controller.applySettings()
-        dismiss()
+    private func durationOption(_ seconds: Int) -> some View {
+        Text("\(seconds) \(localization.text("unit.secondsShort"))").tag(seconds)
     }
 }

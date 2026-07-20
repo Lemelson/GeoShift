@@ -3,6 +3,7 @@ import SwiftUI
 struct CityPickerView: View {
     @Bindable var controller: KeeperController
     @Environment(\.dismiss) private var dismiss
+    @Environment(LocalizationStore.self) private var localization
     @State private var searchText = ""
 
     var body: some View {
@@ -14,7 +15,7 @@ struct CityPickerView: View {
                     ContentUnavailableView.search
                 } else {
                     ForEach(sections) { section in
-                        Section(section.region.title) {
+                        Section(section.region.title(using: localization)) {
                             ForEach(section.cities) { city in
                                 Button {
                                     choose(city)
@@ -30,11 +31,11 @@ struct CityPickerView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Город, страна или регион")
-            .navigationTitle("Выбор города")
+            .searchable(text: $searchText, prompt: localization.text("city.searchPrompt"))
+            .navigationTitle(localization.text("city.pickerTitle"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Готово", action: dismiss.callAsFunction)
+                    Button(localization.text("common.done"), action: dismiss.callAsFunction)
                 }
             }
         }
