@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import GeoShift
 
@@ -34,10 +35,34 @@ struct CityCatalogTests {
         let balkans = CityCatalog.sections(matching: "Балканы")
             .flatMap(\.cities)
             .map(\.id)
+        let thailandEnglish = CityCatalog.sections(matching: "Thailand")
+            .flatMap(\.cities)
+            .map(\.id)
+        let balkansEnglish = CityCatalog.sections(matching: "Balkans")
+            .flatMap(\.cities)
+            .map(\.id)
 
         #expect(thailand.contains("bangkok"))
         #expect(thailand.contains("phuket"))
         #expect(balkans.contains("belgrade"))
         #expect(!balkans.contains("paris"))
+        #expect(thailandEnglish.contains("bangkok"))
+        #expect(balkansEnglish.contains("belgrade"))
+    }
+
+    @Test("Every city has English and Russian display values")
+    func bilingualDisplayValues() {
+        for city in CityCatalog.cities {
+            #expect(!city.localizedName(for: .english).isEmpty)
+            #expect(!city.localizedName(for: .russian).isEmpty)
+            #expect(!city.localizedCountry(for: .english).isEmpty)
+            #expect(!city.localizedCountry(for: .russian).isEmpty)
+            #expect(city.localizedName(for: .english).range(of: "[А-Яа-яЁё]", options: .regularExpression) == nil)
+            #expect(city.localizedCountry(for: .english).range(of: "[А-Яа-яЁё]", options: .regularExpression) == nil)
+        }
+
+        #expect(CityCatalog.city(withID: "bogota")?.localizedName(for: .english) == "Bogotá")
+        #expect(CityCatalog.city(withID: "ho-chi-minh")?.localizedName(for: .english) == "Ho Chi Minh City")
+        #expect(CityCatalog.city(withID: "san-jose")?.localizedName(for: .english) == "San José")
     }
 }

@@ -1,37 +1,76 @@
 @preconcurrency import Foundation
 
+private final class CommandExecution: @unchecked Sendable {
+    let process = Process()
+    let outputPipe = Pipe()
+
+    func waitForResult() -> CommandResult {
+        process.waitUntilExit()
+        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        return CommandResult(
+            status: process.terminationStatus,
+            output: String(decoding: data, as: UTF8.self)
+        )
+    }
+
+    func terminate() {
+        guard process.isRunning else {
+            return
+        }
+        process.terminate()
+    }
+
+    func killIfNeeded() {
+        if process.isRunning {
+            kill(process.processIdentifier, SIGKILL)
+        }
+    }
+}
+
 actor CommandRunner {
-    func run(_ executable: String, arguments: [String]) async -> CommandResult {
-        await withCheckedContinuation { continuation in
-            let process = Process()
-            let outputPipe = Pipe()
+    func run(
+        _ executable: String,
+        arguments: [String],
+        timeoutSeconds: Double = 5
+    ) async -> CommandResult {
+        let execution = CommandExecution()
+        execution.process.executableURL = URL(fileURLWithPath: executable)
+        execution.process.arguments = arguments
+        execution.process.standardOutput = execution.outputPipe
+        execution.process.standardError = execution.outputPipe
 
-            process.executableURL = URL(fileURLWithPath: executable)
-            process.arguments = arguments
-            process.standardOutput = outputPipe
-            process.standardError = outputPipe
+        do {
+            try execution.process.run()
+        } catch {
+            return CommandResult(status: -1, output: error.localizedDescription)
+        }
 
-            process.terminationHandler = { finishedProcess in
-                let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                let output = String(decoding: data, as: UTF8.self)
-                continuation.resume(
-                    returning: CommandResult(
-                        status: finishedProcess.terminationStatus,
-                        output: output
-                    )
+        return await withTaskGroup(of: CommandResult.self) { group in
+            group.addTask {
+                execution.waitForResult()
+            }
+            group.addTask {
+                do {
+                    try await Task.sleep(for: .seconds(timeoutSeconds))
+                } catch {
+                    return CommandResult(status: -2, output: "The command was cancelled.")
+                }
+
+                execution.terminate()
+                try? await Task.sleep(for: .seconds(2))
+                execution.killIfNeeded()
+                return CommandResult(
+                    status: -2,
+                    output: "The command timed out after \(Int(timeoutSeconds)) seconds."
                 )
             }
 
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(
-                    returning: CommandResult(
-                        status: -1,
-                        output: error.localizedDescription
-                    )
-                )
-            }
+            let result = await group.next() ?? CommandResult(
+                status: -2,
+                output: "The command returned no result."
+            )
+            group.cancelAll()
+            return result
         }
     }
 }

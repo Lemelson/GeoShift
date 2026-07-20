@@ -2,30 +2,36 @@ import SwiftUI
 
 enum KeeperState: Sendable {
     case stopped
+    case restoring
     case waiting
     case active
     case working
     case failed
 
-    var title: String {
+    @MainActor
+    func title(using localization: LocalizationStore) -> String {
         switch self {
         case .stopped:
-            "Остановлено"
+            localization.text("state.stopped")
+        case .restoring:
+            localization.text("state.restoring")
         case .waiting:
-            "Ожидание iPhone"
+            localization.text("state.waiting")
         case .active:
-            "Белград активен"
+            localization.text("state.active")
         case .working:
-            "Подключение…"
+            localization.text("state.working")
         case .failed:
-            "Требуется внимание"
+            localization.text("state.failed")
         }
     }
 
     var systemImage: String {
         switch self {
         case .stopped:
-            "stop.circle"
+            "location.slash.circle"
+        case .restoring:
+            "iphone.gen3.radiowaves.left.and.right"
         case .waiting:
             "iphone.gen3.badge.exclamationmark"
         case .active:
@@ -40,7 +46,9 @@ enum KeeperState: Sendable {
     var color: Color {
         switch self {
         case .stopped:
-            .secondary
+            .green
+        case .restoring:
+            .orange
         case .waiting:
             .orange
         case .active:

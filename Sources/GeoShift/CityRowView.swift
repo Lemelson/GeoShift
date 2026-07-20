@@ -3,6 +3,7 @@ import SwiftUI
 struct CityRowView: View {
     let city: City
     let isSelected: Bool
+    @Environment(LocalizationStore.self) private var localization
 
     var body: some View {
         HStack(spacing: 12) {
@@ -11,8 +12,8 @@ struct CityRowView: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(city.name)
-                Text(city.country)
+                Text(city.localizedName(for: localization.language))
+                Text(city.localizedCountry(for: localization.language))
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -22,7 +23,7 @@ struct CityRowView: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                    .accessibilityLabel("Выбрано")
+                    .accessibilityLabel(localization.text("city.selected"))
             }
         }
         .contentShape(.rect)

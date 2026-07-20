@@ -1,0 +1,62 @@
+name: Bug report
+description: Report reproducible GeoShift behavior.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the troubleshooting guide first. Never attach pairing records or unredacted logs.
+  - type: input
+    id: version
+    attributes:
+      label: GeoShift version
+      placeholder: 1.5.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: macOS, iOS, and iPhone model
+      placeholder: macOS 15.x, iOS 18.x, iPhone model
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection type
+      options:
+        - iOS 27+ Wi-Fi RemotePairing
+        - Trusted USB
+        - Legacy trusted Wi-Fi
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include the visible GeoShift state and what happened before it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted diagnostics
+      description: Remove UDIDs, IPs, usernames, local paths, pairing data, and trust material.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I removed device identifiers, IP addresses, personal paths, pairing records, and credentials.
+          required: true
+        - label: This is not a security vulnerability or private report.
+          required: true

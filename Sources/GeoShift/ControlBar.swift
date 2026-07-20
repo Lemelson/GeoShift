@@ -2,11 +2,12 @@ import SwiftUI
 
 struct ControlBar: View {
     let controller: KeeperController
+    @Environment(LocalizationStore.self) private var localization
 
     var body: some View {
         HStack(spacing: 10) {
             Button(
-                "Start",
+                localization.text("control.start"),
                 systemImage: "play.fill",
                 action: controller.startAction
             )
@@ -19,14 +20,14 @@ struct ControlBar: View {
             )
 
             Button(
-                "Stop",
+                localization.text("control.restore"),
                 systemImage: "stop.fill",
                 action: controller.stopAction
             )
             .disabled(controller.isBusy || controller.state == .stopped)
 
             Button(
-                "Restart",
+                localization.text("control.restart"),
                 systemImage: "arrow.clockwise",
                 action: controller.restartAction
             )
@@ -35,7 +36,7 @@ struct ControlBar: View {
             Spacer()
 
             Button(
-                "Refresh",
+                localization.text("control.refresh"),
                 systemImage: "arrow.trianglehead.2.clockwise",
                 action: controller.refreshAction
             )
