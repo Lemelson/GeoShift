@@ -10,11 +10,13 @@ final class KeeperController {
     private let localization: LocalizationStore
     private let runner = CommandRunner()
     private let pairingRunner = CommandRunner()
+    private var appLivenessLease: AppLivenessLease?
     private let label = "com.lemelson.geoshift.keeper"
     private var didRecoverOnLaunch = false
     private var lastHeartbeatWrite = 0.0
     private var lastWatchdogCheck = 0.0
     private var lastLogRefresh = 0.0
+    @ObservationIgnored private var monitoringTask: Task<Void, Never>?
 
     var state: KeeperState = .working
     var detail: String
@@ -54,6 +56,7 @@ final class KeeperController {
 
     init(localization: LocalizationStore) {
         self.localization = localization
+        appLivenessLease = AppLivenessLease(url: AppPaths.appLivenessLockURL)
         let saved = ConfigStore.load()
         selectedCity = saved.flatMap { CityCatalog.city(withID: $0.cityID) } ?? CityCatalog.defaultCity
         retrySeconds = saved?.retrySeconds ?? 5
@@ -109,7 +112,25 @@ final class KeeperController {
         )
     }
 
-    func poll() async {
+    func startMonitoring() {
+        guard monitoringTask == nil else {
+            return
+        }
+        monitoringTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+            await monitor()
+            monitoringTask = nil
+        }
+    }
+
+    func refreshAfterActivation() {
+        startMonitoring()
+        Task { await refreshStatus() }
+    }
+
+    private func monitor() async {
         await recoverOnLaunch()
 
         while !Task.isCancelled {
@@ -134,6 +155,14 @@ final class KeeperController {
     }
 
     func installAndStart() async {
+        if appLivenessLease == nil {
+            appLivenessLease = AppLivenessLease(url: AppPaths.appLivenessLockURL)
+        }
+        guard appLivenessLease != nil else {
+            state = .failed
+            errorMessage = localizedDescription(for: KeeperError.missingLivenessLease)
+            return
+        }
         await transition(
             simulationEnabled: true,
             message: localization.text("controller.startingTunnel")
@@ -255,8 +284,7 @@ final class KeeperController {
         didRecoverOnLaunch = true
 
         // Keep the on-disk LaunchAgent definition current even when the last
-        // A successful clear send is already recorded and no worker needs to
-        // run right now.
+        // successful clear send is already recorded and no worker needs to run.
         if ConfigStore.load() != nil {
             do {
                 try installLaunchAgent()
@@ -407,6 +435,9 @@ final class KeeperController {
         requestID: String? = nil,
         heartbeatAt: Double? = nil
     ) throws -> KeeperConfiguration {
+        if simulationEnabled, appLivenessLease == nil {
+            throw KeeperError.missingLivenessLease
+        }
         let heartbeat = simulationEnabled
             ? heartbeatAt ?? Date.now.timeIntervalSince1970
             : nil

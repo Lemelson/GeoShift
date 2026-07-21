@@ -4,6 +4,7 @@ enum KeeperError: LocalizedError {
     case commandFailed(String)
     case missingDependency(String)
     case missingKeeper
+    case missingLivenessLease
 
     var errorDescription: String? {
         switch self {
@@ -13,6 +14,8 @@ enum KeeperError: LocalizedError {
             "pymobiledevice3 was not found: \(path)"
         case .missingKeeper:
             "keeper.py is missing from the app bundle."
+        case .missingLivenessLease:
+            "GeoShift could not acquire its process-liveness lock."
         }
     }
 
@@ -28,6 +31,8 @@ enum KeeperError: LocalizedError {
             "\(localization.text("error.missingDependency")): \(path)"
         case .missingKeeper:
             localization.text("error.missingKeeper")
+        case .missingLivenessLease:
+            localization.text("error.missingLivenessLease")
         }
     }
 }
