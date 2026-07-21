@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/Lemelson/GeoShift/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Lemelson/GeoShift/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="Version 1.5.1" src="https://img.shields.io/badge/version-1.5.1-2563eb">
+  <img alt="Version 1.5.2" src="https://img.shields.io/badge/version-1.5.2-2563eb">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-black">
   <img alt="Swift 6.2" src="https://img.shields.io/badge/Swift-6.2-f05138">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green"></a>
