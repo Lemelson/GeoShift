@@ -6,20 +6,12 @@ struct SettingsView: View {
     @Environment(LocalizationStore.self) private var localization
 
     var body: some View {
-        @Bindable var localization = localization
-
         NavigationStack {
             Form {
                 Section(localization.text("settings.languageSection")) {
-                    Picker(
-                        localization.text("settings.language"),
-                        selection: $localization.language
-                    ) {
-                        ForEach(AppLanguage.allCases) { language in
-                            Text(language.displayName).tag(language)
-                        }
+                    LabeledContent(localization.text("settings.language")) {
+                        LanguagePicker()
                     }
-                    .pickerStyle(.segmented)
                 }
 
                 Section(localization.text("settings.timings")) {
@@ -77,9 +69,6 @@ struct SettingsView: View {
         }
         .onChange(of: controller.locationRefreshSeconds) {
             controller.applySettings()
-        }
-        .onChange(of: localization.language) {
-            controller.languageDidChange()
         }
     }
 

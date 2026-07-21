@@ -15,6 +15,15 @@ enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    var selectionLabel: String {
+        switch self {
+        case .english:
+            "🇬🇧 \(displayName)"
+        case .russian:
+            "🇷🇺 \(displayName)"
+        }
+    }
+
     var locale: Locale {
         Locale(identifier: rawValue)
     }

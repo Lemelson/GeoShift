@@ -38,10 +38,12 @@ struct LocalizationTests {
         localization.language = .english
         #expect(localization.text("header.subtitle") == "Control iPhone GPS simulation from your Mac")
         #expect(localization.text("settings.language") == "App language")
+        #expect(AppLanguage.english.selectionLabel == "🇬🇧 English")
 
         localization.language = .russian
         #expect(localization.text("header.subtitle").contains("симуляцией GPS"))
         #expect(localization.text("settings.language") == "Язык приложения")
+        #expect(AppLanguage.russian.selectionLabel == "🇷🇺 Русский")
         #expect(KeeperError.commandFailed("The command timed out after 5 seconds.")
             .description(using: localization) == "Команда завершилась с ошибкой.")
     }

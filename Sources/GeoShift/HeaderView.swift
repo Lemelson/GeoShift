@@ -16,11 +16,15 @@ struct HeaderView: View {
 
             Spacer()
 
-            Button(
-                localization.text("header.settings"),
-                systemImage: "gearshape",
-                action: settingsAction
-            )
+            HStack {
+                LanguagePicker(controlSize: .small)
+
+                Button(
+                    localization.text("header.settings"),
+                    systemImage: "gearshape",
+                    action: settingsAction
+                )
+            }
         }
     }
 }

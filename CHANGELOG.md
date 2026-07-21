@@ -2,6 +2,20 @@
 
 All notable changes to GeoShift are documented here.
 
+## 1.5.2 — 2026-07-21
+
+### Added
+
+- A compact English/Russian language switch in the main window header.
+- Apple emoji flags in both the main-window and Settings language controls.
+
+### Changed
+
+- The default window height now fits the collapsed interface instead of leaving
+  a large empty area below Diagnostics.
+- Expanded diagnostics remain bounded inside their own scrolling log panel, and
+  the main window can still be resized vertically.
+
 ## 1.5.1 — 2026-07-21
 
 ### Fixed

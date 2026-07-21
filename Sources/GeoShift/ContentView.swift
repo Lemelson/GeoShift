@@ -42,6 +42,9 @@ struct ContentView: View {
         .sheet(isPresented: $isSettingsPresented) {
             SettingsView(controller: controller)
         }
+        .onChange(of: localization.language) {
+            controller.languageDidChange()
+        }
     }
 
     private func showCityPicker() {

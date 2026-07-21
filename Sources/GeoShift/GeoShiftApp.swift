@@ -23,7 +23,7 @@ struct GeoShiftApp: App {
                     controller.startMonitoring()
                 }
         }
-        .defaultSize(width: 760, height: 820)
+        .defaultSize(width: 760, height: 680)
         .windowResizability(.contentMinSize)
     }
 }
