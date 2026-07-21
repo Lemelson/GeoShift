@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/Lemelson/GeoShift/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/Lemelson/GeoShift/actions/workflows/ci.yml/badge.svg"></a>
-  <img alt="Version 1.5.0" src="https://img.shields.io/badge/version-1.5.0-2563eb">
+  <img alt="Version 1.5.1" src="https://img.shields.io/badge/version-1.5.1-2563eb">
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-black">
   <img alt="Swift 6.2" src="https://img.shields.io/badge/Swift-6.2-f05138">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-green"></a>
@@ -122,10 +122,12 @@ The pairing permission does not need weekly or monthly renewal. See
 - **Choose city** searches English and Russian city, country, and region names.
 - **Settings** controls language, reconnect timing, GPS refresh, and Wi-Fi pairing.
 
-GeoShift writes an application heartbeat every 30 seconds. If the app crashes or
-is killed, a missing heartbeat converts the active request into Restore GPS within
-five minutes. Command-Q is refused when the app cannot confirm either a completed
-clear or a durable handoff to the restore worker.
+GeoShift writes an application heartbeat every 30 seconds and holds a kernel-owned
+liveness lease for the lifetime of the GUI process. A delayed UI task or App Nap
+cannot be mistaken for a crash: after a stale heartbeat, the worker restores real
+GPS only when it can also prove that the GeoShift process is gone. Command-Q is
+refused when the app cannot confirm either a completed clear or a durable handoff
+to the restore worker.
 
 The UI reports **Simulation cleared** only after the no-reply `clear` command
 returns successfully through the connected iPhone's developer channel. Apple's

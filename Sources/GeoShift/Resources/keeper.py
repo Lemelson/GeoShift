@@ -3,6 +3,8 @@
 
 import argparse
 import asyncio
+import errno
+import fcntl
 import json
 import logging
 import math
@@ -26,6 +28,7 @@ from pymobiledevice3.usbmux import list_devices
 APP_SUPPORT_PATH = Path.home() / "Library/Application Support/GeoShift"
 CONFIG_PATH = APP_SUPPORT_PATH / "config.json"
 STATUS_PATH = APP_SUPPORT_PATH / "status.json"
+APP_LIVENESS_LOCK_PATH = APP_SUPPORT_PATH / "gui-liveness.lock"
 LOG_PATH = Path(
     os.environ.get(
         "GEOSHIFT_LOG_PATH",
@@ -47,6 +50,23 @@ class ConfigurationError(ValueError):
 
 class AmbiguousDeviceError(RuntimeError):
     pass
+
+
+class AppCleanupLease:
+    def __init__(self, descriptor: int):
+        self.descriptor = descriptor
+
+    def close(self) -> None:
+        if self.descriptor < 0:
+            return
+        with suppress(OSError):
+            fcntl.flock(self.descriptor, fcntl.LOCK_UN)
+        with suppress(OSError):
+            os.close(self.descriptor)
+        self.descriptor = -1
+
+    def __del__(self):
+        self.close()
 
 
 LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -124,15 +144,57 @@ def load_config(path: Path | None = None) -> dict:
     }
 
 
-def simulation_is_requested(config: dict, now: float | None = None) -> bool:
-    if not config.get("simulationEnabled", False):
-        return False
+def heartbeat_is_fresh(config: dict, now: float | None = None) -> bool:
     heartbeat = config.get("appHeartbeatAt")
     if heartbeat is None:
         return False
     now = time.time() if now is None else now
     age = now - float(heartbeat)
     return -APP_HEARTBEAT_FUTURE_TOLERANCE_SECONDS <= age <= APP_HEARTBEAT_TIMEOUT_SECONDS
+
+
+def acquire_app_cleanup_lease(
+    path: Path | None = None,
+) -> tuple[str, AppCleanupLease | None]:
+    path = path or APP_LIVENESS_LOCK_PATH
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_CLOEXEC", 0)
+        descriptor = os.open(path, flags, 0o600)
+        os.chmod(path, 0o600)
+    except OSError as error:
+        logger.warning("Could not probe GeoShift GUI liveness: %s", error)
+        return "unknown", None
+
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as error:
+        os.close(descriptor)
+        if error.errno in (errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK):
+            return "alive", None
+        logger.warning("Could not lock GeoShift GUI liveness file: %s", error)
+        return "unknown", None
+    return "dead", AppCleanupLease(descriptor)
+
+
+def simulation_request_decision(
+    config: dict,
+    cleanup_lease: AppCleanupLease | None = None,
+    now: float | None = None,
+) -> tuple[bool, AppCleanupLease | None]:
+    if not config.get("simulationEnabled", False):
+        return False, cleanup_lease
+    if cleanup_lease is not None:
+        return False, cleanup_lease
+    if heartbeat_is_fresh(config, now=now):
+        return True, None
+
+    liveness, cleanup_lease = acquire_app_cleanup_lease()
+    if liveness == "dead":
+        return False, cleanup_lease
+    # An unknown lock result is not proof that the GUI died. Preserve the
+    # explicit Start request and retry instead of clearing a live simulation.
+    return True, None
 
 
 def config_version(path: Path | None = None) -> int:
@@ -395,6 +457,7 @@ async def run_worker(stop_event: asyncio.Event) -> None:
     last_logged_request_id = ""
     waiting_log_time = 0.0
     expired_heartbeat_request = ""
+    cleanup_lease = None
 
     while not stop_event.is_set():
         version = config_version()
@@ -434,7 +497,10 @@ async def run_worker(stop_event: asyncio.Event) -> None:
             await wait_until_timeout_or_config_change(stop_event, 5, version)
             continue
 
-        should_simulate = simulation_is_requested(config)
+        should_simulate, cleanup_lease = simulation_request_decision(
+            config,
+            cleanup_lease,
+        )
         if config["simulationEnabled"] and not should_simulate:
             if expired_heartbeat_request != config["requestID"]:
                 logger.warning("App heartbeat expired; forcing real GPS restoration")
@@ -489,7 +555,10 @@ async def run_worker(stop_event: asyncio.Event) -> None:
                     while not stop_event.is_set():
                         config = load_config()
                         version = config_version()
-                        should_simulate = simulation_is_requested(config)
+                        should_simulate, cleanup_lease = simulation_request_decision(
+                            config,
+                            cleanup_lease,
+                        )
 
                         if not should_simulate:
                             try:
@@ -557,7 +626,10 @@ async def run_worker(stop_event: asyncio.Event) -> None:
             if now - waiting_log_time >= 60:
                 logger.warning("Target iPhone is not connected; waiting")
                 waiting_log_time = now
-            should_simulate = simulation_is_requested(config)
+            should_simulate, cleanup_lease = simulation_request_decision(
+                config,
+                cleanup_lease,
+            )
             phase = "waitingForDevice" if should_simulate else "clearPending"
             message = (
                 "Connect the unlocked iPhone over USB"
@@ -584,7 +656,10 @@ async def run_worker(stop_event: asyncio.Event) -> None:
             raise
         except Exception as error:
             logger.exception("Connection failed; retrying")
-            should_simulate = simulation_is_requested(config)
+            should_simulate, cleanup_lease = simulation_request_decision(
+                config,
+                cleanup_lease,
+            )
             phase = "failed" if should_simulate else "clearPending"
             write_status(
                 phase,

@@ -10,6 +10,8 @@ enum AppPaths {
 
     static let pairingStatusURL = applicationSupportURL.appending(path: "pairing-status.json")
 
+    static let appLivenessLockURL = applicationSupportURL.appending(path: "gui-liveness.lock")
+
     static let pairingRecordsURL = FileManager.default.homeDirectoryForCurrentUser
         .appending(path: ".pymobiledevice3")
 

@@ -20,6 +20,7 @@ struct GeoShiftApp: App {
                 .frame(minWidth: 680, minHeight: 680)
                 .onAppear {
                     appDelegate.controller = controller
+                    controller.startMonitoring()
                 }
         }
         .defaultSize(width: 760, height: 820)

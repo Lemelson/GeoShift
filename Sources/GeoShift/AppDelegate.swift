@@ -4,6 +4,10 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var controller: KeeperController?
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        controller?.refreshAfterActivation()
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         true
     }

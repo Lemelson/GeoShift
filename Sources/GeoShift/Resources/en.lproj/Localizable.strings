@@ -99,3 +99,4 @@
 "error.previousOperation" = "The previous operation failed. Try again or open Diagnostics for connection details.";
 "error.missingDependency" = "pymobiledevice3 was not found";
 "error.missingKeeper" = "keeper.py is missing from the app bundle.";
+"error.missingLivenessLease" = "GeoShift could not start safely because another instance or cleanup operation owns its liveness lock. Close the other instance and try again.";

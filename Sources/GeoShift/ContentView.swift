@@ -36,9 +36,6 @@ struct ContentView: View {
             }
             .padding(24)
         }
-        .task {
-            await controller.poll()
-        }
         .sheet(isPresented: $isCityPickerPresented) {
             CityPickerView(controller: controller)
         }

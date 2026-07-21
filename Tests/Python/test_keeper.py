@@ -1,4 +1,5 @@
 import asyncio
+import fcntl
 import importlib.util
 import json
 import os
@@ -45,7 +46,50 @@ class ConfigurationTests(unittest.TestCase):
             "appHeartbeatAt": 1_000.0,
         }
 
-        self.assertFalse(keeper.simulation_is_requested(config, now=1_301.0))
+        cleanup_lease = object()
+        should_simulate, returned_lease = keeper.simulation_request_decision(
+            config,
+            cleanup_lease=cleanup_lease,
+            now=1_301.0,
+        )
+        self.assertFalse(should_simulate)
+        self.assertIs(returned_lease, cleanup_lease)
+
+    def test_stale_app_heartbeat_keeps_simulation_when_gui_is_alive(self):
+        config = {
+            "simulationEnabled": True,
+            "appHeartbeatAt": 1_000.0,
+        }
+
+        with patch.object(
+            keeper,
+            "acquire_app_cleanup_lease",
+            return_value=("alive", None),
+        ):
+            should_simulate, cleanup_lease = keeper.simulation_request_decision(
+                config,
+                now=1_301.0,
+            )
+        self.assertTrue(should_simulate)
+        self.assertIsNone(cleanup_lease)
+
+    def test_liveness_probe_error_never_proves_gui_death(self):
+        config = {
+            "simulationEnabled": True,
+            "appHeartbeatAt": 1_000.0,
+        }
+
+        with patch.object(
+            keeper,
+            "acquire_app_cleanup_lease",
+            return_value=("unknown", None),
+        ):
+            should_simulate, cleanup_lease = keeper.simulation_request_decision(
+                config,
+                now=1_301.0,
+            )
+        self.assertTrue(should_simulate)
+        self.assertIsNone(cleanup_lease)
 
     def test_fresh_app_heartbeat_keeps_simulation_requested(self):
         config = {
@@ -53,10 +97,53 @@ class ConfigurationTests(unittest.TestCase):
             "appHeartbeatAt": 1_000.0,
         }
 
-        self.assertTrue(keeper.simulation_is_requested(config, now=1_299.0))
+        should_simulate, cleanup_lease = keeper.simulation_request_decision(
+            config,
+            now=1_299.0,
+        )
+        self.assertTrue(should_simulate)
+        self.assertIsNone(cleanup_lease)
 
-    def test_missing_app_heartbeat_fails_safe_to_restore(self):
-        self.assertFalse(keeper.simulation_is_requested({"simulationEnabled": True}))
+    def test_missing_app_heartbeat_restores_after_gui_death(self):
+        cleanup_lease = object()
+        should_simulate, returned_lease = keeper.simulation_request_decision(
+            {"simulationEnabled": True},
+            cleanup_lease=cleanup_lease,
+        )
+        self.assertFalse(should_simulate)
+        self.assertIs(returned_lease, cleanup_lease)
+
+    def test_liveness_lock_distinguishes_live_and_dead_gui(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "gui-liveness.lock"
+            descriptor = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                state, cleanup_lease = keeper.acquire_app_cleanup_lease(path)
+                self.assertEqual(state, "alive")
+                self.assertIsNone(cleanup_lease)
+            finally:
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+                os.close(descriptor)
+
+            state, cleanup_lease = keeper.acquire_app_cleanup_lease(path)
+            self.assertEqual(state, "dead")
+            self.assertIsNotNone(cleanup_lease)
+
+            competing_descriptor = os.open(path, os.O_RDWR)
+            try:
+                with self.assertRaises(BlockingIOError):
+                    fcntl.flock(
+                        competing_descriptor,
+                        fcntl.LOCK_EX | fcntl.LOCK_NB,
+                    )
+            finally:
+                os.close(competing_descriptor)
+
+            cleanup_lease.close()
+            replacement_state, replacement_lease = keeper.acquire_app_cleanup_lease(path)
+            self.assertEqual(replacement_state, "dead")
+            replacement_lease.close()
 
 
 class WorkerSafetyTests(unittest.IsolatedAsyncioTestCase):
