@@ -6,6 +6,7 @@
 | Swift | 6.2+ | Required by `Package.swift` |
 | Python | 3.11–3.13 | Python 3.13 is recommended |
 | pymobiledevice3 | 9.31.0 | Installed separately, not bundled |
+| pmd-pytcp | >=0.0.4, <0.1.0 | Synchronous API required by pymobiledevice3 9.31.0 |
 | Physical iPhone | iOS 17+ | Developer Mode and a trusted Mac are required |
 | iOS 27 Wi-Fi pairing | Beta-tested | Device-initiated RemotePairing, no cable required |
 | Older iOS pairing | USB first | Later trusted Wi-Fi reconnect may work |

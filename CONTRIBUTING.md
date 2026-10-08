@@ -16,13 +16,20 @@ Use GitHub Security Advisories, not a public issue, for security or privacy bugs
 
 ```bash
 brew install uv
-uv tool install --python 3.13 'pymobiledevice3==9.31.0'
+uv tool install --python 3.13 --with 'pmd-pytcp>=0.0.4,<0.1.0' \
+  'pymobiledevice3==9.31.0'
 swift test
-PYTHONDONTWRITEBYTECODE=1 uv run --with 'pymobiledevice3==9.31.0' \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.13 \
+  --with 'pymobiledevice3==9.31.0' --with 'pmd-pytcp>=0.0.4,<0.1.0' \
   python -m unittest discover -s Tests/Python -v
 ```
 
 See [Installation](docs/INSTALLATION.md) for the complete setup.
+
+The transitive `pmd-pytcp` bound is required by pymobiledevice3 9.31.0's
+synchronous tunnel API. Keep installation, test commands, and CI aligned when
+changing either dependency. The Python suite checks the real installed API;
+it does not replace physical-iPhone tests of Start, Restore GPS, and reconnect.
 
 ## Pull requests
 
