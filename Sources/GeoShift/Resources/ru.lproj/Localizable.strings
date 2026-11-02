@@ -93,6 +93,7 @@
 "status.active" = "Симуляция активна";
 "status.gpsEvery" = "GPS каждые";
 "status.connecting" = "Фоновый сервис подключается";
+"status.incompatibleBackend" = "В бэкенде pymobiledevice3 несовместимая версия pmd-pytcp. Почините его командой из диагностики и нажмите «Перезапустить».";
 "status.notConfirmed" = "Реальный GPS не подтверждён; нажмите «Вернуть GPS»";
 
 "error.commandFailed" = "Команда завершилась с ошибкой.";

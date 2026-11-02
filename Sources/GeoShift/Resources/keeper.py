@@ -5,6 +5,7 @@ import argparse
 import asyncio
 import errno
 import fcntl
+import inspect
 import json
 import logging
 import math
@@ -12,6 +13,7 @@ import os
 import signal
 import time
 from contextlib import suppress
+from importlib import metadata
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -42,6 +44,10 @@ WAKE_CHECK_SECONDS = 0.25
 STOP_GRACE_SECONDS = 12
 APP_HEARTBEAT_TIMEOUT_SECONDS = 5 * 60
 APP_HEARTBEAT_FUTURE_TOLERANCE_SECONDS = 60
+BACKEND_REPAIR_COMMAND = (
+    "uv tool install --force --python 3.13 --with 'pmd-pytcp>=0.0.4,<0.1.0' "
+    "'pymobiledevice3==9.31.0'"
+)
 
 
 class ConfigurationError(ValueError):
@@ -49,6 +55,10 @@ class ConfigurationError(ValueError):
 
 
 class AmbiguousDeviceError(RuntimeError):
+    pass
+
+
+class IncompatibleBackendError(RuntimeError):
     pass
 
 
@@ -229,6 +239,7 @@ def write_status(
     message: str | None = None,
     path: Path | None = None,
     required: bool = False,
+    problem: str | None = None,
 ) -> None:
     path = path or STATUS_PATH
     payload = {
@@ -239,6 +250,8 @@ def write_status(
         "message": message,
         "updatedAt": time.time(),
     }
+    if problem:
+        payload["problem"] = problem
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     try:
@@ -308,7 +321,36 @@ async def resolve_target_device(saved_udid: str | None) -> tuple[str, bool]:
     return available_udids[0], False
 
 
+def backend_incompatibility(
+    pymobiledevice3_version: str | None = None,
+    pytcp_start=None,
+) -> str | None:
+    # pymobiledevice3 9.x calls the synchronous PyTCP API. pmd-pytcp 0.1.0+
+    # made it async, so the tunnel never opens and asyncio floods QueueFull.
+    try:
+        pymobiledevice3_version = pymobiledevice3_version or metadata.version("pymobiledevice3")
+        if pytcp_start is None:
+            from pmd_pytcp import stack
+
+            pytcp_start = stack.start
+    except (ImportError, metadata.PackageNotFoundError):
+        return None
+    if not pymobiledevice3_version.startswith("9.") or not inspect.iscoroutinefunction(pytcp_start):
+        return None
+    try:
+        pytcp_version = metadata.version("pmd-pytcp")
+    except metadata.PackageNotFoundError:
+        pytcp_version = "unknown"
+    return (
+        f"pmd-pytcp {pytcp_version} is incompatible with pymobiledevice3 "
+        f"{pymobiledevice3_version}; repair the backend with: {BACKEND_REPAIR_COMMAND}"
+    )
+
+
 async def open_target_tunnel(target_udid: str, uses_remote_pairing: bool):
+    problem = backend_incompatibility()
+    if problem:
+        raise IncompatibleBackendError(problem)
     tunnel = UserspaceRsdTunnel(serial=target_udid, autopair=not uses_remote_pairing)
     if not uses_remote_pairing:
         return tunnel, await asyncio.wait_for(tunnel.aopen(), timeout=CONNECT_TIMEOUT_SECONDS)
@@ -456,6 +498,7 @@ async def run_worker(stop_event: asyncio.Event) -> None:
     target_udid = previous_status.get("deviceUDID") if simulation_may_be_active else None
     last_logged_request_id = ""
     waiting_log_time = 0.0
+    backend_log_time = 0.0
     expired_heartbeat_request = ""
     cleanup_lease = None
 
@@ -642,6 +685,23 @@ async def run_worker(stop_event: asyncio.Event) -> None:
                 simulation_may_be_active,
                 target_udid,
                 message,
+            )
+        except IncompatibleBackendError as error:
+            now = time.monotonic()
+            if now - backend_log_time >= 60:
+                logger.error("%s", error)
+                backend_log_time = now
+            should_simulate, cleanup_lease = simulation_request_decision(
+                config,
+                cleanup_lease,
+            )
+            write_status(
+                "failed" if should_simulate else "clearPending",
+                config["requestID"],
+                simulation_may_be_active,
+                target_udid,
+                str(error),
+                problem="incompatibleBackend",
             )
         except AmbiguousDeviceError as error:
             logger.error("%s", error)

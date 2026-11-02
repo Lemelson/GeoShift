@@ -72,6 +72,7 @@ GeoShift does not attempt to conceal simulation or bypass third-party rules.
 | Swift | 6.2 or newer |
 | Python | 3.11–3.13; 3.13 recommended |
 | pymobiledevice3 | 9.31.0 |
+| pmd-pytcp | >=0.0.4, <0.1.0 (synchronous API) |
 | Physical iPhone | iOS 17+ with Developer Mode |
 | Cable-free pairing | iOS 27 RemotePairing; currently beta-tested |
 | iOS Simulator | Not targeted; use Xcode's built-in controls |
@@ -84,8 +85,13 @@ Install the backend in an isolated `uv` environment:
 
 ```bash
 brew install uv
-uv tool install --python 3.13 'pymobiledevice3==9.31.0'
+uv tool install --python 3.13 --with 'pmd-pytcp>=0.0.4,<0.1.0' \
+  'pymobiledevice3==9.31.0'
 ```
+
+Keep the `pmd-pytcp` bound: pymobiledevice3 9.31.0 uses its synchronous API,
+which changed in 0.1.0. For an existing installation, use the
+[backend repair command](docs/TROUBLESHOOTING.md#queuefull-or-unawaited-coroutine-errors).
 
 Clone, build, and install GeoShift:
 
@@ -143,13 +149,18 @@ and apply it again; choose **Restore GPS** before restarting whenever possible.
 
 ```bash
 swift test
-PYTHONDONTWRITEBYTECODE=1 uv run --with 'pymobiledevice3==9.31.0' \
+PYTHONDONTWRITEBYTECODE=1 uv run --python 3.13 \
+  --with 'pymobiledevice3==9.31.0' --with 'pmd-pytcp>=0.0.4,<0.1.0' \
   python -m unittest discover -s Tests/Python -v
 ./Scripts/package_app.sh release
 ```
 
 The package script builds the localized resource bundle, creates `GeoShift.app`,
 and applies an ad-hoc signature.
+
+Python tests check the installed backend versions and the real synchronous
+PyTCP API without opening a tunnel. Connecting, changing location, and verifying
+Restore GPS in Maps still require a physical iPhone.
 
 ## Documentation
 

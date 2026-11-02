@@ -271,10 +271,15 @@ final class KeeperController {
             configuration: configuration,
             workerStatus: workerStatus
         )
-        detail = statusDetail(
-            state: state,
-            configuration: configuration
+        detail = StatusParser.hasIncompatibleBackend(
+            configuration: configuration,
+            workerStatus: workerStatus
         )
+            ? localization.text("status.incompatibleBackend")
+            : statusDetail(
+                state: state,
+                configuration: configuration
+            )
     }
 
     private func recoverOnLaunch() async {

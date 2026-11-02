@@ -2,6 +2,21 @@
 
 All notable changes to GeoShift are documented here.
 
+## Unreleased
+
+### Fixed
+
+- Fresh backend installs no longer resolve `pmd-pytcp` 0.1.0 or newer, whose
+  async API breaks pymobiledevice3 9.31.0's userspace tunnel and floods the log
+  with `asyncio.queues.QueueFull` ([#4](https://github.com/Lemelson/GeoShift/issues/4)).
+  Installation, test, and CI commands now pin `pmd-pytcp>=0.0.4,<0.1.0`.
+
+### Added
+
+- The worker detects an incompatible `pmd-pytcp` before opening a tunnel, logs
+  the repair command once a minute instead of looping on `QueueFull`, and the
+  app shows a dedicated status message.
+
 ## 1.5.2 — 2026-07-21
 
 ### Added

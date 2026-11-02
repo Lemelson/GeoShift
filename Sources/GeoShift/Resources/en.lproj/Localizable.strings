@@ -94,6 +94,7 @@
 "status.gpsEvery" = "GPS refresh every";
 "status.connecting" = "The background service is connecting";
 "status.notConfirmed" = "Real GPS is not confirmed; choose Restore GPS";
+"status.incompatibleBackend" = "The pymobiledevice3 backend has an incompatible pmd-pytcp. Repair it with the command in Diagnostics, then choose Restart.";
 
 "error.commandFailed" = "The command failed.";
 "error.previousOperation" = "The previous operation failed. Try again or open Diagnostics for connection details.";

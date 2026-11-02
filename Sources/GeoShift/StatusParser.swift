@@ -1,6 +1,20 @@
 import Foundation
 
 enum StatusParser {
+    static let incompatibleBackendProblem = "incompatibleBackend"
+
+    static func hasIncompatibleBackend(
+        configuration: KeeperConfiguration?,
+        workerStatus: WorkerStatus?
+    ) -> Bool {
+        guard let configuration, let workerStatus else {
+            return false
+        }
+        return workerStatus.requestID == configuration.requestID
+            && workerStatus.problem == incompatibleBackendProblem
+            && [.failed, .clearPending].contains(workerStatus.phase)
+    }
+
     static func state(
         launchctlOutput: String,
         configuration: KeeperConfiguration?,

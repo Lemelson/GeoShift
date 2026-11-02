@@ -19,4 +19,5 @@ struct WorkerStatus: Codable, Equatable, Sendable {
     let simulationMayBeActive: Bool
     let message: String?
     let updatedAt: Double
+    var problem: String? = nil
 }

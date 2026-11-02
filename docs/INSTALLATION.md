@@ -10,6 +10,7 @@ ad-hoc signed macOS app, copies it to `/Applications`, and opens it.
 - Xcode 26 or a Swift 6.2 toolchain
 - Python 3.11–3.13
 - `pymobiledevice3` 9.31.0
+- `pmd-pytcp` >=0.0.4, <0.1.0 (the synchronous API required by that backend)
 - a physical iPhone with Developer Mode enabled
 
 GeoShift does not target the iOS Simulator. Xcode already includes location
@@ -21,10 +22,15 @@ The recommended installation keeps `pymobiledevice3` isolated with `uv`:
 
 ```bash
 brew install uv
-uv tool install --python 3.13 'pymobiledevice3==9.31.0'
+uv tool install --python 3.13 --with 'pmd-pytcp>=0.0.4,<0.1.0' \
+  'pymobiledevice3==9.31.0'
 ```
 
 GeoShift also checks common Homebrew, pipx, and local-bin locations.
+Those environments must use the same compatible versions. The app selects an
+existing interpreter; packaging does not install or repair Python dependencies.
+For an existing incompatible uv installation, use the
+[backend repair command](TROUBLESHOOTING.md#queuefull-or-unawaited-coroutine-errors).
 
 ## Build and install GeoShift
 

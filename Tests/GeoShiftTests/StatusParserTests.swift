@@ -134,6 +134,47 @@ struct StatusParserTests {
         )
     }
 
+    @Test("An incompatible backend reported for the current request is surfaced")
+    func incompatibleBackendIsSurfaced() throws {
+        var failed = status(.failed, mayBeActive: false)
+        failed.problem = StatusParser.incompatibleBackendProblem
+        var pending = status(.clearPending, mayBeActive: true)
+        pending.problem = StatusParser.incompatibleBackendProblem
+        var recovered = status(.active, mayBeActive: true)
+        recovered.problem = StatusParser.incompatibleBackendProblem
+
+        #expect(StatusParser.hasIncompatibleBackend(configuration: enabled, workerStatus: failed))
+        #expect(StatusParser.hasIncompatibleBackend(
+            configuration: configuration(enabled: false),
+            workerStatus: pending
+        ))
+        #expect(!StatusParser.hasIncompatibleBackend(configuration: enabled, workerStatus: recovered))
+        #expect(!StatusParser.hasIncompatibleBackend(
+            configuration: enabled,
+            workerStatus: status(.failed, mayBeActive: false)
+        ))
+
+        let otherRequest = WorkerStatus(
+            phase: .failed,
+            requestID: "old-request",
+            deviceUDID: "phone",
+            simulationMayBeActive: false,
+            message: nil,
+            updatedAt: 0,
+            problem: StatusParser.incompatibleBackendProblem
+        )
+        #expect(!StatusParser.hasIncompatibleBackend(configuration: enabled, workerStatus: otherRequest))
+    }
+
+    @Test("Worker status decodes with and without a problem code")
+    func problemCodeIsOptional() throws {
+        let legacy = Data(#"{"phase":"failed","requestID":"request","deviceUDID":null,"simulationMayBeActive":false,"message":null,"updatedAt":1}"#.utf8)
+        let current = Data(#"{"phase":"failed","requestID":"request","deviceUDID":null,"simulationMayBeActive":false,"message":"x","updatedAt":1,"problem":"incompatibleBackend"}"#.utf8)
+
+        #expect(try JSONDecoder().decode(WorkerStatus.self, from: legacy).problem == nil)
+        #expect(try JSONDecoder().decode(WorkerStatus.self, from: current).problem == "incompatibleBackend")
+    }
+
     private func status(_ phase: WorkerStatus.Phase, mayBeActive: Bool) -> WorkerStatus {
         WorkerStatus(
             phase: phase,

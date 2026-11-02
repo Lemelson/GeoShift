@@ -387,6 +387,7 @@ class WorkerSafetyTests(unittest.IsolatedAsyncioTestCase):
                 return provider
 
         with (
+            patch.object(keeper, "backend_incompatibility", return_value=None),
             patch.object(keeper, "UserspaceRsdTunnel", FakeTunnel),
             patch.object(
                 keeper.tunnel_service,
@@ -434,6 +435,82 @@ class WorkerSafetyTests(unittest.IsolatedAsyncioTestCase):
                 patch.object(keeper, "resolve_target_device", must_not_resolve),
             ):
                 await keeper.run_worker(asyncio.Event())
+
+
+class BackendCompatibilityTests(unittest.IsolatedAsyncioTestCase):
+    def test_async_pytcp_is_reported_for_pymobiledevice3_9(self):
+        async def async_start():
+            pass
+
+        problem = keeper.backend_incompatibility("9.31.0", async_start)
+
+        self.assertIn("incompatible with pymobiledevice3 9.31.0", problem)
+        self.assertIn(keeper.BACKEND_REPAIR_COMMAND, problem)
+
+    def test_synchronous_pytcp_and_newer_backends_are_not_flagged(self):
+        async def async_start():
+            pass
+
+        def sync_start():
+            pass
+
+        self.assertIsNone(keeper.backend_incompatibility("9.31.0", sync_start))
+        self.assertIsNone(keeper.backend_incompatibility("10.0.0", async_start))
+
+    async def test_incompatible_backend_never_opens_a_tunnel(self):
+        class MustNotOpen:
+            def __init__(self, *args, **kwargs):
+                raise AssertionError("An incompatible backend must not start a tunnel")
+
+        with (
+            patch.object(keeper, "backend_incompatibility", return_value="pmd-pytcp is async"),
+            patch.object(keeper, "UserspaceRsdTunnel", MustNotOpen),
+        ):
+            with self.assertRaises(keeper.IncompatibleBackendError):
+                await keeper.open_target_tunnel("target-phone", False)
+
+    async def test_incompatible_backend_keeps_restore_pending_with_problem_code(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config_path = Path(directory) / "config.json"
+            status_path = Path(directory) / "status.json"
+            config_path.write_text(json.dumps({
+                "cityID": "moscow",
+                "cityName": "Москва",
+                "country": "Россия",
+                "latitude": 55.7558,
+                "longitude": 37.6173,
+                "retrySeconds": 5,
+                "refreshSeconds": 10,
+                "requestID": "restore-request",
+                "simulationEnabled": False,
+            }))
+            stop_event = asyncio.Event()
+
+            async def target_phone(saved_udid):
+                return "target-phone", True
+
+            async def stop_after_first_attempt(*args, **kwargs):
+                stop_event.set()
+                return False
+
+            with (
+                patch.object(keeper, "CONFIG_PATH", config_path),
+                patch.object(keeper, "STATUS_PATH", status_path),
+                patch.object(keeper, "resolve_target_device", target_phone),
+                patch.object(keeper, "backend_incompatibility", return_value="pmd-pytcp is async"),
+                patch.object(
+                    keeper,
+                    "wait_until_timeout_or_config_change",
+                    stop_after_first_attempt,
+                ),
+            ):
+                await keeper.run_worker(stop_event)
+
+            status = keeper.read_status(status_path)
+            self.assertEqual(status["phase"], "clearPending")
+            self.assertEqual(status["problem"], "incompatibleBackend")
+            self.assertEqual(status["message"], "pmd-pytcp is async")
+            self.assertTrue(status["simulationMayBeActive"])
 
 
 if __name__ == "__main__":
