@@ -50,6 +50,11 @@ warnings that `start`, `connect`, `recv`, or `send` was never awaited, check the
 backend environment. pymobiledevice3 9.31.0 calls the synchronous PyTCP API;
 `pmd-pytcp` 0.1.0 and newer changed those methods to async.
 
+Current GeoShift builds check this before opening a tunnel: the status says
+the backend has an incompatible `pmd-pytcp`, and Diagnostics show the repair
+command below once a minute instead of a `QueueFull` flood. Older builds show
+only the flood.
+
 Repair an existing uv installation by recreating the tool environment:
 
 ```bash
@@ -65,14 +70,13 @@ Re-pairing the phone does not resolve this API mismatch.
 The rapid `QueueFull` flood comes from upstream asyncio callbacks within a
 tunnel attempt. GeoShift's reconnect delay does not rate-limit those callbacks;
 log rotation limits disk use but does not stop the error loop. The compatible
-dependency bound removes this known trigger. General error deduplication remains
-a separate improvement; pending Restore GPS requests must keep retrying.
+dependency bound and the pre-tunnel check remove this known trigger. General
+error deduplication remains a separate improvement; pending Restore GPS
+requests keep retrying and send the clear after the repair and **Restart**.
 
-While restoring, the interface currently says it is waiting for a trusted
-connection even when diagnostics contain a tunnel/backend error. That text alone
-does not prove that trust or pairing is broken. Inspect diagnostics before
-re-pairing; distinguishing device discovery from tunnel failure in the interface
-remains a separate improvement.
+For other tunnel errors, the interface still says Restore GPS is waiting for a
+trusted connection. That text alone does not prove that trust or pairing is
+broken. Inspect diagnostics before re-pairing.
 
 ## Command-Q is refused
 

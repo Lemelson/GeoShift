@@ -39,11 +39,13 @@ struct LocalizationTests {
         #expect(localization.text("header.subtitle") == "Control iPhone GPS simulation from your Mac")
         #expect(localization.text("settings.language") == "App language")
         #expect(AppLanguage.english.selectionLabel == "🇬🇧 English")
+        #expect(localization.text("status.incompatibleBackend").contains("pmd-pytcp"))
 
         localization.language = .russian
         #expect(localization.text("header.subtitle").contains("симуляцией GPS"))
         #expect(localization.text("settings.language") == "Язык приложения")
         #expect(AppLanguage.russian.selectionLabel == "🇷🇺 Русский")
+        #expect(localization.text("status.incompatibleBackend").contains("«Перезапустить»"))
         #expect(KeeperError.commandFailed("The command timed out after 5 seconds.")
             .description(using: localization) == "Команда завершилась с ошибкой.")
     }
